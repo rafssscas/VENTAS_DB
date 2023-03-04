@@ -34,7 +34,7 @@ namespace CapaPresentacion
             if(ousuario != null)
             {
                 //declaramos el formulario y creamos una nueva instancia
-                Inicio form = new Inicio();
+                Inicio form = new Inicio(ousuario);
 
                 form.Show();
                 this.Hide();

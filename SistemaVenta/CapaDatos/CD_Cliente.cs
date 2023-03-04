@@ -1,108 +1,103 @@
-﻿using System;
+﻿using CapaEntidad;
+using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data;
-using System.Data.SqlClient;
-using CapaEntidad;
 
 namespace CapaDatos
 {
-    public class CD_Usuario
+    public class CD_Cliente
     {
-        public List<Usuario> Listar()
+
+        public List<Cliente> Listar()
         {
-            List<Usuario> lista = new List<Usuario>();
+            List<Cliente> lista = new List<Cliente>();
 
             using (SqlConnection oconexion = new SqlConnection(Conexion.cadena))
             {
                 try
                 {
                     StringBuilder query = new StringBuilder();
-                    query.AppendLine("select u.IdUsuario, u.Documento, u.NombreCompleto, u.Correo, u.Clave, u.Estado, r.IdRol, r.Descripcion from USUARIO u");
-                    query.AppendLine("inner join rol r on r.IdRol = u.IdRol");
-
+                    query.AppendLine("SELECT IdCliente, Documento, NombreCompleto, Correo, Telefono, Estado FROM CLIENTE");
                     
-
-
                     SqlCommand cmd = new SqlCommand(query.ToString(), oconexion);
                     cmd.CommandType = CommandType.Text;
                     oconexion.Open();
-                    using(SqlDataReader dr = cmd.ExecuteReader())
+                    using (SqlDataReader dr = cmd.ExecuteReader())
                     {
                         while (dr.Read())
                         {
-                            lista.Add(new Usuario()
+                            lista.Add(new Cliente()
                             {
-                                IdUsuario = Convert.ToInt32(dr["IdUsuario"]),
+                                IdCliente = Convert.ToInt32(dr["IdCliente"]),
                                 Documento = dr["Documento"].ToString(),
                                 NombreCompleto = dr["NombreCompleto"].ToString(),
                                 Correo = dr["Correo"].ToString(),
-                                Clave = dr["Clave"].ToString(),
+                                Telefono = dr["Telefono"].ToString(),
                                 Estado = Convert.ToBoolean(dr["Estado"]),
-                                oRol = new Rol() { IdRol = Convert.ToInt32(dr["IdRol"]), Descripcion = dr["Descripcion"].ToString() }
+                                
 
                             });
                         }
                     }
                 }
-                catch (Exception ex) {
-                    lista = new List<Usuario>();
+                catch (Exception ex)
+                {
+                    lista = new List<Cliente>();
 
                 }
             }
             return lista;
         }
-        
 
-        public int Registrar(Usuario obj, out string Mensaje)
+
+        public int Registrar(Cliente obj, out string Mensaje)
         {
-            int idusuariogenerado = 0;
+            int idClientegenerado = 0;
             Mensaje = string.Empty;
 
             try
             {
                 using (SqlConnection oconexion = new SqlConnection(Conexion.cadena))
                 {
-
-
-                    SqlCommand cmd = new SqlCommand("SP_REGISTRARUSUARIO", oconexion);
+                    SqlCommand cmd = new SqlCommand("SP_RegistrarCliente", oconexion);
                     //parametros de entrada
                     cmd.Parameters.AddWithValue("Documento", obj.Documento);
                     cmd.Parameters.AddWithValue("NombreCompleto", obj.NombreCompleto);
                     cmd.Parameters.AddWithValue("Correo", obj.Correo);
-                    cmd.Parameters.AddWithValue("Clave", obj.Clave);
-                    cmd.Parameters.AddWithValue("IdRol", obj.oRol.IdRol);
+                    cmd.Parameters.AddWithValue("Telefono", obj.Telefono);
                     cmd.Parameters.AddWithValue("Estado", obj.Estado);
                     //parametros de salida
-                    cmd.Parameters.Add("IdUsuarioResultado", SqlDbType.Int).Direction = ParameterDirection.Output;
-                    cmd.Parameters.Add("Mensaje", SqlDbType.VarChar,500).Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("Resultado", SqlDbType.Int).Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("Mensaje", SqlDbType.VarChar, 500).Direction = ParameterDirection.Output;
                     cmd.CommandType = CommandType.StoredProcedure;
-                    
+
                     oconexion.Open();
 
                     cmd.ExecuteNonQuery();
 
-                    idusuariogenerado = Convert.ToInt32(cmd.Parameters["IdUsuarioResultado"].Value);
+                    idClientegenerado = Convert.ToInt32(cmd.Parameters["Resultado"].Value);
                     Mensaje = cmd.Parameters["Mensaje"].Value.ToString();
                 }
             }
             catch (Exception ex)
             {
-                idusuariogenerado = 1;
+                idClientegenerado = 1;
                 Mensaje = ex.Message;
-                
+
             }
 
-            return idusuariogenerado;
+            return idClientegenerado;
 
         }
 
 
 
-        
-public bool Editar(Usuario obj, out string Mensaje)
+
+        public bool Editar(Cliente obj, out string Mensaje)
         {
             bool respuesta = false;
             Mensaje = string.Empty;
@@ -113,25 +108,24 @@ public bool Editar(Usuario obj, out string Mensaje)
                 {
 
 
-                    SqlCommand cmd = new SqlCommand("SP_EDITARUSUARIO", oconexion);
+                    SqlCommand cmd = new SqlCommand("SP_ModificarCliente", oconexion);
                     //parametros de entrada
-                    cmd.Parameters.AddWithValue("IdUsuario", obj.IdUsuario);
+                    cmd.Parameters.AddWithValue("IdCliente", obj.IdCliente);
                     cmd.Parameters.AddWithValue("Documento", obj.Documento);
                     cmd.Parameters.AddWithValue("NombreCompleto", obj.NombreCompleto);
                     cmd.Parameters.AddWithValue("Correo", obj.Correo);
-                    cmd.Parameters.AddWithValue("Clave", obj.Clave);
-                    cmd.Parameters.AddWithValue("IdRol", obj.oRol.IdRol);
+                    cmd.Parameters.AddWithValue("Telefono", obj.Telefono);
                     cmd.Parameters.AddWithValue("Estado", obj.Estado);
                     //parametros de salida
-                    cmd.Parameters.Add("Respuesta", SqlDbType.Int).Direction = ParameterDirection.Output;
-                    cmd.Parameters.Add("Mensaje", SqlDbType.VarChar,500).Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("Resultado", SqlDbType.Int).Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("Mensaje", SqlDbType.VarChar, 500).Direction = ParameterDirection.Output;
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     oconexion.Open();
 
                     cmd.ExecuteNonQuery();
 
-                    respuesta = Convert.ToBoolean(cmd.Parameters["Respuesta"].Value);
+                    respuesta = Convert.ToBoolean(cmd.Parameters["Resultado"].Value);
                     Mensaje = cmd.Parameters["Mensaje"].Value.ToString();
                 }
             }
@@ -148,7 +142,7 @@ public bool Editar(Usuario obj, out string Mensaje)
 
 
 
-        public bool Eliminar(Usuario obj, out string Mensaje)
+        public bool Eliminar(Cliente obj, out string Mensaje)
         {
             bool respuesta = false;
             Mensaje = string.Empty;
@@ -159,21 +153,14 @@ public bool Editar(Usuario obj, out string Mensaje)
                 {
 
 
-                    SqlCommand cmd = new SqlCommand("SP_ELIMINARUSUARIO", oconexion);
+                    SqlCommand cmd = new SqlCommand("delete from cliente where IdCliente = @id", oconexion);
                     //parametros de entrada
-                    cmd.Parameters.AddWithValue("IdUsuario", obj.IdUsuario);
-                    
-                    //parametros de salida
-                    cmd.Parameters.Add("Respuesta", SqlDbType.Int).Direction = ParameterDirection.Output;
-                    cmd.Parameters.Add("Mensaje", SqlDbType.VarChar,500).Direction = ParameterDirection.Output;
-                    cmd.CommandType = CommandType.StoredProcedure;
-
+                    cmd.Parameters.AddWithValue("id", obj.IdCliente);
+                    cmd.CommandType = CommandType.Text;
                     oconexion.Open();
-
-                    cmd.ExecuteNonQuery();
-
-                    respuesta = Convert.ToBoolean(cmd.Parameters["Respuesta"].Value);
-                    Mensaje = cmd.Parameters["Mensaje"].Value.ToString();
+                                  
+                    respuesta = cmd.ExecuteNonQuery() > 0 ? true : false;
+                    
                 }
             }
             catch (Exception ex)
@@ -186,7 +173,6 @@ public bool Editar(Usuario obj, out string Mensaje)
             return respuesta;
 
         }
-
 
     }
 }
